@@ -3,6 +3,7 @@ package com.ecommerce.product_service.controller;
 import com.ecommerce.product_service.dto.ProductRequestDto;
 import com.ecommerce.product_service.dto.ProductResponseDto;
 import com.ecommerce.product_service.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponseDto createProduct(@RequestBody ProductRequestDto productRequestDto){
+    public ProductResponseDto createProduct(@RequestBody @Valid ProductRequestDto productRequestDto){
         return productService.createProduct(productRequestDto);
     }
 
@@ -41,8 +42,13 @@ public class ProductController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductResponseDto update(@PathVariable String id, @RequestBody ProductRequestDto productRequestDto){
+    public ProductResponseDto update(@PathVariable String id, @RequestBody @Valid ProductRequestDto productRequestDto){
         return productService.updateProduct(id, productRequestDto);
+    }
+
+    @GetMapping("/test-fail")
+    public void testFail(){
+        throw new RuntimeException("Error simulado");
     }
 
 }
