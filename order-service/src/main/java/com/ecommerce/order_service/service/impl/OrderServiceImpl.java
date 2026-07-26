@@ -8,6 +8,7 @@ import com.ecommerce.order_service.model.Order;
 import com.ecommerce.order_service.model.OrderLineItems;
 import com.ecommerce.order_service.repository.OrderRepository;
 import com.ecommerce.order_service.service.OrderService;
+import com.ecommerce.order_service.service.client.InventoryClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,8 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final WebClient.Builder webClientBuilder;
+//    private final WebClient.Builder webClientBuilder;
+    private final InventoryClient inventoryClient;
 
     @Override
     @Transactional
@@ -36,12 +38,13 @@ public class OrderServiceImpl implements OrderService {
             String sku = item.getSku();
             Integer quantity = item.getQuantity();
             try {
-                webClientBuilder.build().put()
-                        .uri("http://localhost:8082/api/v1/inventory/reduce/"+sku,
-                                uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block();
+//                webClientBuilder.build().put()
+//                        .uri("http://localhost:8082/api/v1/inventory/reduce/"+sku,
+//                                uriBuilder -> uriBuilder.queryParam("quantity",quantity).build())
+//                        .retrieve()
+//                        .bodyToMono(String.class)
+//                        .block();
+                inventoryClient.reduceStock(sku, quantity);
             }catch (Exception e){
                 log.error("Error al reducir stock para el producto {}: {}", sku, e.getMessage());
                 throw new IllegalArgumentException("No se pudo procesar la orden: Stock insuficiente/Error de inventario");
