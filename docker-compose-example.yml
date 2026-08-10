@@ -32,8 +32,34 @@ services:
       POSTGRES_DB: order_db
     volumes:
       - order_data:/var/lib/postgresql/data
-
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: keycloak-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB: keycloak_db
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak-db
+      KC_DB_USERNAME:
+      KC_DB_PASSWORD:
+      KEYCLOAK_ADMIN:
+      KEYCLOAK_ADMIN_PASSWORD:
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak-db
 volumes:
   mongo_data:
   inventory_data:
   order_data:
+  keycloak_data:
