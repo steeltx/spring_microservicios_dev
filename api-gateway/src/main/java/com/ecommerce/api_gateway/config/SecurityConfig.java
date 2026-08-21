@@ -25,12 +25,18 @@ public class SecurityConfig {
         serverHttpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(authorizeExchangeSpec ->  authorizeExchangeSpec
                         .pathMatchers("/eureka/**").permitAll()
+
                         .pathMatchers(HttpMethod.GET,"/api/v1/product/**").permitAll()
                         .pathMatchers(HttpMethod.GET,"/api/v1/inventory/**").permitAll()
                         .pathMatchers("/api/v1/product/**").hasRole(Role.ADMIN.name())
                         .pathMatchers("/api/v1/inventory/**").hasRole(Role.ADMIN.name())
-                        .pathMatchers(HttpMethod.POST,"/api/v1/order/**").hasRole(Role.ADMIN.name())
-                        .pathMatchers("/api/v1/order/**").hasRole(Role.ADMIN.name())
+
+                        .pathMatchers(HttpMethod.POST,"/api/v1/order").hasRole(Role.USER.name())
+
+                        .pathMatchers(HttpMethod.GET,"/api/v1/order/**").hasAnyRole(Role.ADMIN.name(), Role.USER.name())
+                        .pathMatchers(HttpMethod.DELETE,"/api/v1/order/**").hasAnyRole(Role.ADMIN.name())
+                        .pathMatchers(HttpMethod.PUT,"/api/v1/order/**").hasAnyRole(Role.ADMIN.name())
+
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
