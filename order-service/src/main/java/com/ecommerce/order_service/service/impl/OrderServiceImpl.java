@@ -11,7 +11,6 @@ import com.ecommerce.order_service.service.OrderService;
 import com.ecommerce.order_service.service.client.InventoryClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -36,44 +34,39 @@ public class OrderServiceImpl implements OrderService {
     @Value("${order.enabled:true}")
     private boolean ordersEnabled;
 
-    public CompletableFuture<OrderResponse> fallbackMethod(OrderRequest orderRequest, String userId, Throwable throwable) {
-        return CompletableFuture.supplyAsync(() -> {
-            log.error("Circuit breaker activado, causa: {}", throwable.getMessage());
-            throw new RuntimeException("El servicio de inventario no responde, intente mas tarde");
-        });
+    public OrderResponse fallbackMethod(OrderRequest orderRequest, String userId, Throwable throwable) {
+        log.error("Circuit breaker activado, causa: {}", throwable.getMessage());
+        throw new RuntimeException("El servicio de inventario no responde, intente mas tarde");
     }
 
     @Override
     @Transactional
     @CircuitBreaker(name = "inventory", fallbackMethod = "fallbackMethod")
     @Retry(name = "inventory")
-    @TimeLimiter(name = "inventory")
-    public CompletableFuture<OrderResponse> placeOrder(OrderRequest orderRequest, String userId) {
-        return CompletableFuture.supplyAsync(() -> {
-            if(!ordersEnabled){
-                log.warn("Pedido rechazado, servicio deshabilitado por configuración");
-                throw new RuntimeException("El servicio de pedidos esta actualmente en mantenimiento");
-            }
-            log.info("Colocando nuevo pedido");
-            Order order = orderMapper.toOrder(orderRequest);
-            order.setUserId(userId);
+    public OrderResponse placeOrder(OrderRequest orderRequest, String userId) {
+        if(!ordersEnabled){
+            log.warn("Pedido rechazado, servicio deshabilitado por configuración");
+            throw new RuntimeException("El servicio de pedidos esta actualmente en mantenimiento");
+        }
+        log.info("Colocando nuevo pedido");
+        Order order = orderMapper.toOrder(orderRequest);
+        order.setUserId(userId);
 
-            for(OrderLineItems item: order.getOrderLineItemsList()){
-                String sku = item.getSku();
-                Integer quantity = item.getQuantity();
-                try {
-                    inventoryClient.reduceStock(sku, quantity);
-                }catch (Exception e){
-                    log.error("Error al reducir stock para el producto {}: {}", sku, e.getMessage());
-                    throw new IllegalArgumentException("No se pudo procesar la orden: Stock insuficiente/Error de inventario");
-                }
+        for(OrderLineItems item: order.getOrderLineItemsList()){
+            String sku = item.getSku();
+            Integer quantity = item.getQuantity();
+            try {
+                inventoryClient.reduceStock(sku, quantity);
+            }catch (Exception e){
+                log.error("Error al reducir stock para el producto {}: {}", sku, e.getMessage());
+                throw new IllegalArgumentException("No se pudo procesar la orden: Stock insuficiente/Error de inventario");
             }
+        }
 
-            order.setOrderNumber(UUID.randomUUID().toString());
-            Order saved = orderRepository.save(order);
-            log.info("Orden guardanda con exito");
-            return orderMapper.toOrderResponse(saved);
-        });
+        order.setOrderNumber(UUID.randomUUID().toString());
+        Order saved = orderRepository.save(order);
+        log.info("Orden guardanda con exito");
+        return orderMapper.toOrderResponse(saved);
     }
 
     @Override
