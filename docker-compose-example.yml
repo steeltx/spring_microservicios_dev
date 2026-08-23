@@ -32,6 +32,7 @@ services:
       POSTGRES_DB: order_db
     volumes:
       - order_data:/var/lib/postgresql/data
+
   keycloak-db:
     image: postgres:16-alpine
     container_name: keycloak-db
@@ -43,6 +44,7 @@ services:
       POSTGRES_DB: keycloak_db
     volumes:
       - keycloak_data:/var/lib/postgresql/data
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: keycloak
@@ -58,8 +60,21 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak-db
+
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER:
+      RABBITMQ_DEFAULT_PASS:
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 volumes:
   mongo_data:
   inventory_data:
   order_data:
   keycloak_data:
+  rabbitmq_data:
