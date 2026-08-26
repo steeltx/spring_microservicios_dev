@@ -1,6 +1,8 @@
 package com.ecommerce.order_service.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,4 +16,7 @@ public class OrderRequest {
     @NotEmpty(message = "La orden debe contener al menos un item")
     @Valid
     private List<OrderLineItemsRequest> orderLineItemsList;
+    @NotBlank(message = "El email es requerido")
+    @Email(message = "El formato del email no es valido")
+    private String email;
 }
