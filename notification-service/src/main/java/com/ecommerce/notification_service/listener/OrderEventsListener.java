@@ -16,8 +16,8 @@ public class OrderEventsListener {
     private final JavaMailSender mailSender;
 
     @RabbitListener(queues = "notification-queue")
-    public void handleOrderPlacedEvent(OrderPlacedEvent event){
-        log.info("Evento recibido en Inventario para Orden: {}",event.orderNumber());
+    public void handleOrderConfirmedEvent(OrderPlacedEvent event){
+        log.info("Pedido confirmado para Orden: {}",event.orderNumber());
         try {
 
             SimpleMailMessage message = new SimpleMailMessage();
