@@ -1,6 +1,7 @@
 package com.ecommerce.notification_service.listener;
 
-import com.ecommerce.notification_service.event.OrderPlacedEvent;
+import com.ecommerce.notification_service.event.OrderCancelledEvent;
+import com.ecommerce.notification_service.event.OrderConfirmedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -16,7 +17,7 @@ public class OrderEventsListener {
     private final JavaMailSender mailSender;
 
     @RabbitListener(queues = "notification-queue")
-    public void handleOrderConfirmedEvent(OrderPlacedEvent event){
+    public void handleOrderConfirmedEvent(OrderConfirmedEvent event){
         log.info("Pedido confirmado para Orden: {}",event.orderNumber());
         try {
 
@@ -31,6 +32,23 @@ public class OrderEventsListener {
             log.info("Correo enviado");
         }catch (Exception e){
             log.error("Error al envio correo: {}", e.getMessage());
+        }
+    }
+
+    @RabbitListener(queues = "notification-queue")
+    public void handleOrderCancelledEvent(OrderCancelledEvent event){
+        log.warn("Enviando correo de cancelacion para la orden: {}",event.orderNumber());
+        try {
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(event.email());
+            message.setSubject("Actualización de tu pedido: "+event.orderNumber());
+            message.setText("El pedido ha sido cancelado, motivo: "+event.reason());
+            mailSender.send(message);
+
+            log.info("Correo de cancelación enviado a: {}", event.email());
+        }catch (Exception e){
+            log.error("Error al envio correo de cancelación: {}", e.getMessage());
         }
     }
 
