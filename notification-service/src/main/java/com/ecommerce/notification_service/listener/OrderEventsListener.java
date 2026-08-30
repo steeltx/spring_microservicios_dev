@@ -19,37 +19,31 @@ public class OrderEventsListener {
     @RabbitListener(queues = "notification-queue")
     public void handleOrderConfirmedEvent(OrderConfirmedEvent event){
         log.info("Pedido confirmado para Orden: {}",event.orderNumber());
-        try {
 
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom("test@local.com");
-            message.setTo(event.email());
-            message.setSubject("Orden confirmada: "+event.orderNumber());
-            message.setText("El pedido ha sido recibido exitosamente, gracias por su compra");
-            mailSender.send(message);
+        // throw new RuntimeException("error");
 
-            log.info("Enviando correo de conformación");
-            log.info("Correo enviado");
-        }catch (Exception e){
-            log.error("Error al envio correo: {}", e.getMessage());
-        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("test@local.com");
+        message.setTo(event.email());
+        message.setSubject("Orden confirmada: "+event.orderNumber());
+        message.setText("El pedido ha sido recibido exitosamente, gracias por su compra");
+        mailSender.send(message);
+
+        log.info("Enviando correo de conformación");
+        log.info("Correo enviado");
     }
 
     @RabbitListener(queues = "notification-queue")
     public void handleOrderCancelledEvent(OrderCancelledEvent event){
         log.warn("Enviando correo de cancelacion para la orden: {}",event.orderNumber());
-        try {
 
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(event.email());
-            message.setSubject("Actualización de tu pedido: "+event.orderNumber());
-            message.setText("El pedido ha sido cancelado, motivo: "+event.reason());
-            mailSender.send(message);
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(event.email());
+        message.setSubject("Actualización de tu pedido: "+event.orderNumber());
+        message.setText("El pedido ha sido cancelado, motivo: "+event.reason());
+        mailSender.send(message);
 
-            log.info("Correo de cancelación enviado a: {}", event.email());
-        }catch (Exception e){
-            log.error("Error al envio correo de cancelación: {}", e.getMessage());
-        }
+        log.info("Correo de cancelación enviado a: {}", event.email());
     }
 
 }
