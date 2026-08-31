@@ -1,6 +1,7 @@
 package com.ecommerce.inventory_service.listener;
 
 import com.ecommerce.inventory_service.event.OrderCancelledEvent;
+import com.ecommerce.inventory_service.event.OrderConfirmedEvent;
 import com.ecommerce.inventory_service.event.OrderPlacedEvent;
 import com.ecommerce.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,12 @@ public class OrderEventsListener {
             event.items().forEach(item -> {
                 inventoryService.reduceStock(item.sku(),item.quantity());
             });
-            rabbitTemplate.convertAndSend("order-events","order.confirmed",event);
+
+            OrderConfirmedEvent confirmedEvent = new OrderConfirmedEvent(
+              event.orderNumber(), event.email()
+            );
+
+            rabbitTemplate.convertAndSend("order-events","order.confirmed",confirmedEvent);
             log.info("stock descontado para order: {}", event.orderNumber());
         }catch (Exception e){
             log.error("Error al descontar {}", e.getMessage());
